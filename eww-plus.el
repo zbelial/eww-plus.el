@@ -103,13 +103,18 @@
                                                                 (time-convert nil 'integer)))
                                                 eww-plus-position-alist)))))
 
+(defun eww-plus--visited-url-sorter (u1 u2)
+  (let ((u1t (cddr (cdr u1)))
+        (u2t (cddr (cdr u2))))
+    (> u1t u2t)))
+
 (defun eww-plus--visited-url-collector ()
   "Retrieve all visited urls."
   (when eww-plus-position-alist
     (let (urls url tm)
       (dolist (p eww-plus-position-alist)
         (cl-pushnew (cons (format "%-120s%s" (car p) (format-time-string "%Y-%m-%d %H:%M:%S" (cddr p))) p) urls))
-      urls)))
+      (cl-sort urls #'eww-plus--visited-url-sorter))))
 
 (defun eww-plus-list-visited-urls()
   "Show all visited urls using ivy."
