@@ -70,7 +70,7 @@
       (insert (format "\)\n")))))
 
 (defun eww-plus-kill-buffer-hook ()
-  "Save posotion"
+  "Save position"
   (when (eq major-mode 'eww-mode)
     (let ((url (eww-current-url))
           (position (line-number-at-pos))
@@ -79,6 +79,21 @@
           (setcdr (assoc url eww-plus-position-alist) `(,position . ,timestamp))
         (add-to-list 'eww-plus-position-alist `(,url . (,position . ,timestamp)))))
     (eww-plus--save-session)))
+
+
+(defun eww-plus-save-session-hook ()
+  "Save position of all eww buffers."
+  (dolist (buffer (buffer-list))
+    (with-current-buffer buffer
+      (when (derived-mode-p 'eww-mode)
+        (let ((url (eww-current-url))
+              (position (line-number-at-pos))
+              (timestamp (time-convert nil 'integer)))
+          (if (assoc url eww-plus-position-alist)
+              (setcdr (assoc url eww-plus-position-alist) `(,position . ,timestamp))
+            (add-to-list 'eww-plus-position-alist `(,url . (,position . ,timestamp)))))
+        )))
+  (eww-plus--save-session))
 
 (defun eww-plus-restore-position-hook()
   "Restore postion for a eww buffer."
@@ -184,10 +199,12 @@ Global bindings:
         (add-hook 'kill-buffer-hook #'eww-plus-kill-buffer-hook)
         (add-hook 'eww-after-render-hook #'eww-plus-restore-position-hook)
         (add-hook 'after-init-hook #'eww-plus-restore-session-hook)
+        (add-hook 'kill-emacs-hook #'eww-plus-save-session-hook)
         )
     (remove-hook 'kill-buffer-hook #'eww-plus-kill-buffer-hook)
     (remove-hook 'eww-after-render-hook #'eww-plus-restore-position-hook)
     (remove-hook 'after-init-hook #'eww-plus-restore-session-hook)
+    (remove-hook 'kill-emacs-hook #'eww-plus-save-session-hook)
     ))
 
 (provide 'eww-plus)
