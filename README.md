@@ -30,7 +30,7 @@ Clone this repo and add the directory to `load-path`. If you use `use-package`, 
 These are the features this package provides.
 
 ### Save and restore the position when you killed a eww buffer.
-So, you can reading from where you left.
+So, you can read from where you left.
 
 ### List all of the urls that you have visited.
 Use command `eww-plus-list-visited-urls`.
