@@ -106,6 +106,7 @@
 
 (defun eww-plus-save-session-hook ()
   "Save position of all eww buffers."
+  (eww-plus--maybe-restore)
   (dolist (buffer (buffer-list))
     (with-current-buffer buffer
       (when (derived-mode-p 'eww-mode)
