@@ -103,6 +103,11 @@
     (eww-plus--save-session)
     (eww-plus--update-recent-timestamp (eww-plus--now))))
 
+(defun eww-plus-save-buffer-position ()
+  "Save current position into session file."
+  (interactive)
+  (eww-plus-kill-buffer-hook)
+  )
 
 (defun eww-plus-save-session-hook ()
   "Save position of all eww buffers."
