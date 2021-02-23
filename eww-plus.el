@@ -58,7 +58,28 @@
 (defvar eww-plus-position-alist '()
   "Keep track of urls and postions when killed, plus timestamps.")
 
+(defvar eww-plus--recent-timestamp 0
+  "The most recent time when saving the session.")
+
 ;;; Functions
+(defun eww-plus--file-modified-time (file)
+  "File's latest modification time."
+  (if (f-exists-p file)
+      (time-convert (file-attribute-modification-time (file-attributes file)) 'integer)
+    0))
+
+(defun eww-plus--session-file-modified? ()
+  "Check whether `eww-plus-session-file' is modified by external actions."
+  (> (eww-plus--file-modified-time eww-plus-session-file) eww-plus--recent-timestamp))
+
+(defun eww-plus--update-recent-timestamp (ts)
+  "Update `eww-plus--recent-timestamp'."
+  (setq eww-plus--recent-timestamp ts))
+
+(defun eww-plus--now()
+  "Current timestamp."
+  (time-convert nil 'integer))
+
 (defun eww-plus--save-session()
   "Save eww session when kill emacs."
   (with-temp-file eww-plus-session-file
@@ -72,13 +93,15 @@
 (defun eww-plus-kill-buffer-hook ()
   "Save position"
   (when (eq major-mode 'eww-mode)
+    (eww-plus--maybe-restore)
     (let ((url (eww-current-url))
           (position (line-number-at-pos))
-          (timestamp (time-convert nil 'integer)))
+          (timestamp (eww-plus--now)))
       (if (assoc url eww-plus-position-alist)
           (setcdr (assoc url eww-plus-position-alist) `(,position . ,timestamp))
         (add-to-list 'eww-plus-position-alist `(,url . (,position . ,timestamp)))))
-    (eww-plus--save-session)))
+    (eww-plus--save-session)
+    (eww-plus--update-recent-timestamp (eww-plus--now))))
 
 
 (defun eww-plus-save-session-hook ()
@@ -88,7 +111,7 @@
       (when (derived-mode-p 'eww-mode)
         (let ((url (eww-current-url))
               (position (line-number-at-pos))
-              (timestamp (time-convert nil 'integer)))
+              (timestamp (eww-plus--now)))
           (if (assoc url eww-plus-position-alist)
               (setcdr (assoc url eww-plus-position-alist) `(,position . ,timestamp))
             (add-to-list 'eww-plus-position-alist `(,url . (,position . ,timestamp)))))
@@ -107,18 +130,26 @@
                               (forward-line (1- position))
                               (recenter)))))
 
+(defun eww-plus--maybe-restore ()
+  "If needed, reload session files."
+  (when (eww-plus--session-file-modified?)
+    (eww-plus-restore-session-hook)))
+
 (defun eww-plus-restore-session-hook()
   "Restore eww session."
   (setq eww-plus-position-alist '())
   (when (file-exists-p eww-plus-session-file)
+    (eww-plus--update-recent-timestamp (eww-plus--file-modified-time eww-plus-session-file))
+
     (load-file eww-plus-session-file)
     (when (/= eww-plus-expire-time -1)
       (setq eww-plus-position-alist (seq-filter (lambda (r) (>= (+ (cddr r)
                                                                    (* eww-plus-expire-time 24 3600))
-                                                                (time-convert nil 'integer)))
+                                                                (eww-plus--now)))
                                                 eww-plus-position-alist)))))
 
 (defun eww-plus--visited-url-sorter (u1 u2)
+  "Sorting function for `eww-plus-list-visited-urls'."
   (let ((u1t (cddr (cdr u1)))
         (u2t (cddr (cdr u2))))
     (> u1t u2t)))
