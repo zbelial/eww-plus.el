@@ -131,12 +131,29 @@
         (cl-pushnew (cons (format "%-120s%s" (car p) (format-time-string "%Y-%m-%d %H:%M:%S" (cddr p))) p) urls))
       (cl-sort urls #'eww-plus--visited-url-sorter))))
 
+(defun eww-plus-switch-to-or-open (url)
+  "Open url or switch to the buffer that opens url."
+  (interactive)
+  (let ((buffers (buffer-list))
+        target)
+    (dolist (buffer buffers)
+      (with-current-buffer buffer
+        (when (and
+               (derived-mode-p 'eww-mode)
+               (equal url (eww-current-url)))
+          (setq target buffer))))
+    (if target
+        (switch-to-buffer target)
+      (eww url 4))))
+
 (defun eww-plus-list-visited-urls()
   "Show all visited urls using ivy."
   (interactive)
   (let ((urls (eww-plus--visited-url-collector)))
     (ivy-read "visited URLs: " urls
-              :action (lambda (url) (eww-browse-url (cadr url))))))
+              :action (lambda (url) (eww-plus-switch-to-or-open (cadr url)))
+              )
+    ))
 
 (defun eww-plus-list-buffers()
   "List eww buffers."
