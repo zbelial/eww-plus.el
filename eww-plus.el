@@ -92,7 +92,7 @@
 
 (defun eww-plus-kill-buffer-hook ()
   "Save position"
-  (when (eq major-mode 'eww-mode)
+  (when (derived-mode-p 'eww-mode)
     (eww-plus--maybe-restore)
     (let ((url (eww-current-url))
           (position (line-number-at-pos))
