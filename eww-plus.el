@@ -86,6 +86,7 @@
     (erase-buffer)
     (insert ";;; -*- mode: emacs-lisp -*-\n")
     (when eww-plus-position-alist
+      (setq eww-plus-position-alist (sort eww-plus-position-alist (lambda (p1 p2) (string-lessp (car p1) (car p2)))))
       (insert (format "\(setq eww-plus-position-alist '"))
       (insert (format "%S\n" eww-plus-position-alist))
       (insert (format "\)\n")))))
@@ -99,7 +100,7 @@
           (timestamp (eww-plus--now)))
       (if (assoc url eww-plus-position-alist)
           (setcdr (assoc url eww-plus-position-alist) `(,position . ,timestamp))
-        (add-to-list 'eww-plus-position-alist `(,url . (,position . ,timestamp)))))
+        (add-to-list 'eww-plus-position-alist `(,url . (,position . ,timestamp)) t)))
     (eww-plus--save-session)
     (eww-plus--update-recent-timestamp (eww-plus--now))))
 
@@ -120,7 +121,7 @@
               (timestamp (eww-plus--now)))
           (if (assoc url eww-plus-position-alist)
               (setcdr (assoc url eww-plus-position-alist) `(,position . ,timestamp))
-            (add-to-list 'eww-plus-position-alist `(,url . (,position . ,timestamp)))))
+            (add-to-list 'eww-plus-position-alist `(,url . (,position . ,timestamp)) t)))
         )))
   (eww-plus--save-session))
 
