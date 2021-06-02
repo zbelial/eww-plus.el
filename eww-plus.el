@@ -231,6 +231,10 @@
               :caller 'eww-plus-list-buffers)
     ))
 
+(defun eww-plus-eww-reload-before-advice (&optional LOCAL ENCODE)
+  (eww-plus-kill-buffer-hook)
+  )
+
 (defvar eww-plus-mode-map
   (let ((map (make-sparse-keymap)))
     map)
@@ -255,11 +259,13 @@ Global bindings:
         (add-hook 'eww-after-render-hook #'eww-plus-restore-position-hook)
         (add-hook 'after-init-hook #'eww-plus-restore-session-hook)
         (add-hook 'kill-emacs-hook #'eww-plus-save-session-hook)
+        (advice-add 'eww-reload :before #'eww-plus-eww-reload-before-advice)
         )
     (remove-hook 'kill-buffer-hook #'eww-plus-kill-buffer-hook)
     (remove-hook 'eww-after-render-hook #'eww-plus-restore-position-hook)
     (remove-hook 'after-init-hook #'eww-plus-restore-session-hook)
     (remove-hook 'kill-emacs-hook #'eww-plus-save-session-hook)
+    (advice-remove 'eww-reload #'eww-plus-eww-reload-before-advice)
     ))
 
 (provide 'eww-plus)
