@@ -185,15 +185,24 @@
         (switch-to-buffer target)
       (eww url 4))))
 
+;;;###autoload
 (defun eww-plus-list-visited-urls()
   "Show all visited urls using ivy."
   (interactive)
   (let ((urls (eww-plus--visited-url-collector)))
     (ivy-read "visited URLs: " urls
-              :action (lambda (url) (eww-plus-switch-to-or-open (cadr url)))
+              :action '(1
+                        ( "v" (lambda (url) (eww-plus-switch-to-or-open (cadr url))) "Open url.")
+                        ( "k" (lambda (url)
+                                (setq eww-plus-position-alist (assoc-delete-all (cadr url) eww-plus-position-alist #'string-equal))
+                                (eww-plus--save-session)
+                                )
+                          "Delete record.")
+                        )
               )
     ))
 
+;;;###autoload
 (defun eww-plus-list-buffers()
   "List eww buffers."
   (interactive)
