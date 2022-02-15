@@ -125,7 +125,7 @@
         )))
   (eww-plus--save-session))
 
-(defun eww-plus-restore-position-hook()
+(defun eww-plus-visit-file-hook()
   "Restore postion for a eww buffer."
   (run-with-timer 0.2 nil (lambda ()
                             (let* ((url (eww-current-url))
@@ -135,7 +135,9 @@
                                 (setq position (cadr record)))
                               (goto-char (point-min))
                               (forward-line (1- position))
-                              (recenter)))))
+                              (recenter))
+                            ;; when visiting a file, save it immediately.
+                            (eww-plus-save-session-hook))))
 
 (defun eww-plus--maybe-restore ()
   "If needed, reload session files."
@@ -266,13 +268,13 @@ Global bindings:
   (if eww-plus-mode
       (progn
         (add-hook 'kill-buffer-hook #'eww-plus-kill-buffer-hook)
-        (add-hook 'eww-after-render-hook #'eww-plus-restore-position-hook)
+        (add-hook 'eww-after-render-hook #'eww-plus-visit-file-hook)
         (add-hook 'after-init-hook #'eww-plus-restore-session-hook)
         (add-hook 'kill-emacs-hook #'eww-plus-save-session-hook)
         (advice-add 'eww-reload :before #'eww-plus-eww-reload-before-advice)
         )
     (remove-hook 'kill-buffer-hook #'eww-plus-kill-buffer-hook)
-    (remove-hook 'eww-after-render-hook #'eww-plus-restore-position-hook)
+    (remove-hook 'eww-after-render-hook #'eww-plus-visit-file-hook)
     (remove-hook 'after-init-hook #'eww-plus-restore-session-hook)
     (remove-hook 'kill-emacs-hook #'eww-plus-save-session-hook)
     (advice-remove 'eww-reload #'eww-plus-eww-reload-before-advice)
