@@ -178,10 +178,22 @@
         (cl-pushnew (cons (format "%-120s%s" (car p) (format-time-string "%Y-%m-%d %H:%M:%S" (cddr p))) p) urls))
       (cl-sort urls #'eww-plus--visited-url-sorter))))
 
+(defun eww-plus--read-url ()
+  (let (url default)
+    (with-current-buffer (current-buffer)
+      (cond
+       ((and buffer-file-name (member (file-name-extension buffer-file-name) '("html")))
+        (setq default (concat "file://" buffer-file-name))
+        )
+       (t
+        (setq default "")
+        )))
+    (setq url (read-string "URL: " default nil default))))
+
 ;;;###autoload
 (defun eww-plus-switch-to-or-open (url)
   "Open url or switch to the buffer that opens url."
-  (interactive)
+  (interactive (list (eww-plus--read-url)))
   (let ((buffers (buffer-list))
         target)
     (dolist (buffer buffers)
