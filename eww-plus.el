@@ -178,6 +178,7 @@
         (cl-pushnew (cons (format "%-120s%s" (car p) (format-time-string "%Y-%m-%d %H:%M:%S" (cddr p))) p) urls))
       (cl-sort urls #'eww-plus--visited-url-sorter))))
 
+;;;###autoload
 (defun eww-plus-switch-to-or-open (url)
   "Open url or switch to the buffer that opens url."
   (interactive)
