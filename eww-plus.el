@@ -175,7 +175,7 @@
   (when eww-plus-position-alist
     (let (urls url tm)
       (dolist (p eww-plus-position-alist)
-        (cl-pushnew (cons (format "%-120s%s" (car p) (format-time-string "%Y-%m-%d %H:%M:%S" (cddr p))) p) urls))
+        (cl-pushnew (cons (format "%-150s%s" (car p) (format-time-string "%Y-%m-%d %H:%M:%S" (cddr p))) p) urls))
       (cl-sort urls #'eww-plus--visited-url-sorter))))
 
 (defun eww-plus--read-url ()
