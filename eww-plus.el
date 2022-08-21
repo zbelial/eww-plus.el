@@ -223,45 +223,6 @@
               )
     ))
 
-;;;###autoload
-(defun eww-plus-list-buffers()
-  "List eww buffers."
-  (interactive)
-  (let (buffers-info
-        (domain-length 0)
-        (title-length 0)
-        url title format
-        buffers
-        )
-    (dolist (buffer (buffer-list))
-      (with-current-buffer buffer
-        (when (derived-mode-p 'eww-mode)
-          (push (vector buffer (plist-get eww-data :title)
-                        (plist-get eww-data :url))
-                buffers-info))))
-
-    (setq buffers-info (nreverse buffers-info)) ;more recent on top
-
-    (dolist (buffer-info buffers-info)
-      (setq title-length (max title-length
-                              (length (elt buffer-info 1)))
-            domain-length (max domain-length
-                               (length (elt buffer-info 2)))))
-    
-    (setq format (format "%%-%ds %%-%ds" title-length domain-length))
-
-    (dolist (buffer-info buffers-info)
-      (setq buffer (elt buffer-info 0)
-            title (elt buffer-info 1)
-            url (elt buffer-info 2))
-      (cl-pushnew (cons (format format title url) buffer) buffers))
-
-    (ivy-read "EWW buffers: " buffers
-              :action #'(lambda (buf)
-                          (switch-to-buffer (cdr buf)))
-              :caller 'eww-plus-list-buffers)
-    ))
-
 (defun eww-plus-eww-reload-before-advice (&optional LOCAL ENCODE)
   (eww-plus-kill-buffer-hook)
   )
