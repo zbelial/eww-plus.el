@@ -204,7 +204,12 @@
           (setq target buffer))))
     (if target
         (switch-to-buffer target)
-      (eww url 4))))
+      (if (or 
+           (string-prefix-p "http://" url)
+           (string-prefix-p "https://" url)
+           (file-exists-p (string-remove-prefix "file://" url)))
+          (eww url 4)
+        (user-error "url %s not existing." url)))))
 
 ;;;###autoload
 (defun eww-plus-list-visited-urls()
