@@ -91,8 +91,10 @@
       (insert (format "%S\n" eww-plus-position-alist))
       (insert (format "\)\n")))))
 
-(defun eww-plus-kill-buffer-hook ()
+;;;###autoload
+(defun eww-plus-save-to-visited-list ()
   "Save position"
+  (interactive)
   (when (derived-mode-p 'eww-mode)
     (eww-plus--maybe-restore)
     (let ((url (eww-current-url))
@@ -102,7 +104,20 @@
           (setcdr (assoc url eww-plus-position-alist) `(,position . ,timestamp))
         (add-to-list 'eww-plus-position-alist `(,url . (,position . ,timestamp)) t)))
     (eww-plus--save-session)
-    (eww-plus--update-recent-timestamp (eww-plus--now))))
+    (eww-plus--update-recent-timestamp (eww-plus--now))
+    (message "Saved current eww buffer to visited list.")))
+
+(defun eww-plus-kill-buffer-hook ()
+  "Save position"
+  (when (derived-mode-p 'eww-mode)
+    (eww-plus--maybe-restore)
+    (let ((url (eww-current-url))
+          (position (line-number-at-pos))
+          (timestamp (eww-plus--now)))
+      (when (assoc url eww-plus-position-alist)
+        (setcdr (assoc url eww-plus-position-alist) `(,position . ,timestamp))
+        (eww-plus--save-session)
+        (eww-plus--update-recent-timestamp timestamp)))))
 
 ;;;###autoload
 (defun eww-plus-save-buffer-position ()
@@ -125,10 +140,8 @@
         (let ((url (eww-current-url))
               (position (line-number-at-pos))
               (timestamp (eww-plus--now)))
-          (if (assoc url eww-plus-position-alist)
-              (setcdr (assoc url eww-plus-position-alist) `(,position . ,timestamp))
-            (add-to-list 'eww-plus-position-alist `(,url . (,position . ,timestamp)) t)))
-        )))
+          (when (assoc url eww-plus-position-alist)
+            (setcdr (assoc url eww-plus-position-alist) `(,position . ,timestamp)))))))
   (eww-plus--save-session))
 
 (defun eww-plus-visit-file-hook()
@@ -136,14 +149,13 @@
   (run-with-timer 0.2 nil (lambda ()
                             (let* ((url (eww-current-url))
                                    (record (assoc url eww-plus-position-alist))
-                                   (position 1))
+                                   (last-line 1))
                               (when record
-                                (setq position (cadr record)))
+                                (message "saved url")
+                                (setq last-line (cadr record)))
                               (goto-char (point-min))
-                              (forward-line (1- position))
-                              (recenter))
-                            ;; when visiting a file, save it immediately.
-                            (eww-plus-save-session-hook))))
+                              (forward-line (1- last-line))
+                              (recenter)))))
 
 (defun eww-plus--maybe-restore ()
   "If needed, reload session files."
@@ -175,7 +187,7 @@
   (when eww-plus-position-alist
     (let (urls url tm)
       (dolist (p eww-plus-position-alist)
-        (cl-pushnew (cons (format "%-150s%s" (car p) (format-time-string "%Y-%m-%d %H:%M:%S" (cddr p))) p) urls))
+        (cl-pushnew (cons (format "%-150s%5s   %s" (car p) (cadr p) (format-time-string "%Y-%m-%d %H:%M:%S" (cddr p))) p) urls))
       (cl-sort urls #'eww-plus--visited-url-sorter))))
 
 (defun eww-plus--read-url ()
@@ -219,6 +231,7 @@
     (ivy-read "visited URLs: " urls
               :action '(1
                         ( "v" (lambda (url) (eww-plus-switch-to-or-open (cadr url))) "Open url.")
+                        ( "V" (lambda (url) (eww (cadr url))) "Open url in a new buffer.")
                         ( "k" (lambda (url)
                                 (setq eww-plus-position-alist (assoc-delete-all (cadr url) eww-plus-position-alist #'string-equal))
                                 (eww-plus--save-session)
