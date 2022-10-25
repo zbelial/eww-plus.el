@@ -187,7 +187,7 @@
   (when eww-plus-position-alist
     (let (urls url tm)
       (dolist (p eww-plus-position-alist)
-        (cl-pushnew (cons (format "%-150s%5s   %s" (car p) (cadr p) (format-time-string "%Y-%m-%d %H:%M:%S" (cddr p))) p) urls))
+        (cl-pushnew (cons (format "%-150s%5s   %s" (truncate-string-to-width (car p) 150 0 ?\s "...") (cadr p) (format-time-string "%Y-%m-%d %H:%M:%S" (cddr p))) p) urls))
       (cl-sort urls #'eww-plus--visited-url-sorter))))
 
 (defun eww-plus--read-url ()
@@ -214,14 +214,16 @@
                (derived-mode-p 'eww-mode)
                (equal url (eww-current-url)))
           (setq target buffer))))
-    (if target
-        (switch-to-buffer target)
-      (if (or 
-           (string-prefix-p "http://" url)
-           (string-prefix-p "https://" url)
-           (file-exists-p (string-remove-prefix "file://" url)))
-          (eww url 4)
-        (user-error "url %s not existing." url)))))
+    (cond
+     (target
+      (switch-to-buffer target))
+     ((or (string-prefix-p "http://" url)
+          (string-prefix-p "https://" url))
+      (eww url 4))
+     ((file-exists-p (string-remove-prefix "file://" url))
+      (eww (concat "file://" (string-remove-prefix "file://" url)) 4))
+     (t
+      (user-error "invalid url %s." url)))))
 
 ;;;###autoload
 (defun eww-plus-list-visited-urls()
